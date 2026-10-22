@@ -12,8 +12,8 @@ android {
         // 24 so the launcher installs on Android 7.0 TVs (CVTE MT5863); java.time is desugared below.
         minSdk 24
         targetSdk 34
-        versionCode 6
-        versionName '2.5'
+        versionCode 7
+        versionName '2.6'
     }
 
     buildTypes {
