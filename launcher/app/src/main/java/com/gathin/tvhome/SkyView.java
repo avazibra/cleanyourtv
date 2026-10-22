@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -69,9 +70,11 @@ public class SkyView extends View {
         if (intensity > 0) render(true);
     }
 
-    /** Today's sunrise and sunset at the configured place, or null without one (fixed reference day). */
+    /** Today's sunrise and sunset at the configured place, or null without one (fixed reference day). Always null
+     *  before API 26, where java.time is missing. */
     @Nullable
     private int[] sunTimes() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return null;
         String lat = getContext().getString(R.string.latitude);
         String lon = getContext().getString(R.string.longitude);
         if (lat.isEmpty() || lon.isEmpty()) return null;

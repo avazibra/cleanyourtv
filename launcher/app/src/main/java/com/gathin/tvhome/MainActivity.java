@@ -69,6 +69,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.FloatPropertyCompat;
 import androidx.dynamicanimation.animation.SpringAnimation;
@@ -350,7 +351,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         dockRow = cfg.dockRow;
         focusOvershoot = cfg.focusOvershoot;
         festival = cfg.festival;
-        festive = festival.active(LocalDate.now());
+        festive = festivalActiveToday();
         liveTvPkg = cfg.liveTvPackage;
         // Some tuner screens are neither a leanback entry nor reachable by an action alone (CVTE's
         // TvSettingActivity shares MAIN with two other activities in its package): name the activity then.
@@ -743,7 +744,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onResume() {
         super.onResume();
         // A festival that started or ended while Home was in the background: rebuild with or without it.
-        if (festive != festival.active(LocalDate.now())) {
+        if (festive != festivalActiveToday()) {
             recreate();
             return;
         }
@@ -783,12 +784,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         handler.postDelayed(minuteTick, MINUTE_MS);
         if (festive && diya != null) {
             diya.start();
-            LocalDate today = LocalDate.now();
-            if (!reducedMotion && !today.equals(lastPetalShower)) {
-                lastPetalShower = today;
-                handler.postDelayed(this::playPetalShower, 450);
-            }
+            if (!reducedMotion && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) schedulePetalShower();
         }
+    }
+
+    /** Whether the theme's festival shows today; always false before API 26 (java.time), where none is ever set. */
+    private boolean festivalActiveToday() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && festival.active(LocalDate.now());
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private void schedulePetalShower() {
+        LocalDate today = LocalDate.now();
+        if (today.equals(lastPetalShower)) return;
+        lastPetalShower = today;
+        handler.postDelayed(this::playPetalShower, 450);
     }
 
     @Override
@@ -855,11 +865,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** True when PackageManager reports apps changed since the last rebuild (one binder call). */
     private boolean packagesChangedSinceRebuild() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return true;   // getChangedPackages is 8.0+: always rebuild
         ChangedPackages changed = getPackageManager().getChangedPackages(packageSequence);
         return changed != null && !changed.getPackageNames().isEmpty();
     }
 
     private int currentPackageSequence(int since) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return since;
         ChangedPackages changed = getPackageManager().getChangedPackages(since);
         return changed != null ? changed.getSequenceNumber() : since;
     }
@@ -2123,7 +2135,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * nothing animates, so the panel costs the GPU nothing between ticks.
      */
     private void updateRace() {
-        if (raceCalendar.isEmpty()) return;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || raceCalendar.isEmpty()) return;   // java.time
         RaceWeekend.State s = RaceWeekend.at(raceCalendar, java.time.Instant.now());
         if (s == null) {
             racePanel.setVisibility(View.GONE);

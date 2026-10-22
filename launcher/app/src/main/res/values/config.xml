@@ -268,7 +268,8 @@
          "sky_intensity": 60 in a theme's config.json. -->
     <integer name="sky_intensity">0</integer>
     <!-- Where the TV is, in decimal degrees, so the sky's sunrise and sunset glows follow the real sun
-         (computed on the TV, no network). Empty: a fixed temperate day, sunset glow around 19:00.
+         (computed on the TV, no network). Empty: a fixed temperate day, sunset glow around 19:00. The same fixed
+         day on Android 7.x (API 24/25), where the sun is not computed.
          Vilnius: 54.69 and 25.28. -->
     <string name="latitude" translatable="false"></string>
     <string name="longitude" translatable="false"></string>

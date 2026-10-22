@@ -1,6 +1,9 @@
 package com.gathin.tvhome;
 
 import android.content.res.Resources;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -13,8 +16,10 @@ import java.util.Locale;
  * Race-weekend mode. A theme's config.json can carry an F1 calendar ({@code race_calendar}, written by
  * tools/race_calendar.py); from shortly before a weekend's first session until the race is over, Home shows
  * a small panel with the next session and a countdown. Scheduling uses the clock against owner-pushed
- * data and is tested on the JVM; display labels use Android resources.
+ * data and is tested on the JVM; display labels use Android resources. It is all java.time, so it needs
+ * API 26: on Android 7.x the calendar is never read and the panel stays hidden.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 final class RaceWeekend {
 
     /** The panel shows from this long before a weekend's first session... */

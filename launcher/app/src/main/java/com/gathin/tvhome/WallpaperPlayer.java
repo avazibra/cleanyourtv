@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -177,10 +178,14 @@ final class WallpaperPlayer {
         text.setMaxWidth(Math.round(520 * dp));
         text.setFocusable(false);
         text.setAlpha(0f);
-        try {
-            text.setTypeface(context.getResources().getFont(R.font.outfit_regular));
-        } catch (Exception ignored) {
-            // the system font is fine
+        // Resources.getFont is 8.0+ (ResourcesCompat would add its font-loading code to the APK): the system font is
+        // fine before that, as it already is for the layouts' android:fontFamily.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                text.setTypeface(context.getResources().getFont(R.font.outfit_regular));
+            } catch (Exception ignored) {
+                // the system font is fine
+            }
         }
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.END);
@@ -250,6 +255,7 @@ final class WallpaperPlayer {
             if (dimColor != 0) new Canvas(decoded).drawColor(dimColor);
             // One copy in GPU memory instead of a software bitmap plus its texture; the decode stays off the UI
             // thread for rotations, and Home's return no longer uploads 4-8 MB to the GPU.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return decoded;   // no hardware bitmaps before 8.0
             Bitmap gpu = decoded.copy(Bitmap.Config.HARDWARE, false);
             if (gpu == null) return decoded;
             decoded.recycle();

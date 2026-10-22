@@ -1,6 +1,9 @@
 package com.gathin.tvhome;
 
 import android.content.res.Resources;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -10,7 +13,8 @@ import java.util.Locale;
  * A festive skin set by a theme's config.json: {@code festival}, {@code festival_until}, {@code greeting}
  * and {@code accent_color}. While it is active the pills get festive icons (a diya for the network, a bell
  * for Inputs, a marigold for Settings), the greeting is replaced and the focus glow takes the accent colour.
- * It switches itself off after {@code festival_until}, so nobody has to remember to undo it.
+ * It switches itself off after {@code festival_until}, so nobody has to remember to undo it. Dates are
+ * java.time, so parsing and the date test are API 26+: on Android 7.x no festival is ever set ({@link #NONE}).
  */
 final class Festival {
 
@@ -39,6 +43,7 @@ final class Festival {
      * Builds the skin from raw config values. Anything malformed turns the skin off rather than leaving a
      * festival on the screen forever: an unreadable end date or an empty name gives {@link #NONE}.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     static Festival parse(String name, String until, String greeting, String accent) {
         String n = name == null ? "" : name.trim().toLowerCase(Locale.ROOT);
         if (n.isEmpty() || n.length() > 40) return NONE;
@@ -55,6 +60,7 @@ final class Festival {
     }
 
     /** Whether the skin shows today. */
+    @RequiresApi(Build.VERSION_CODES.O)
     boolean active(LocalDate today) {
         return !name.isEmpty() && (until == null || !today.isAfter(until));
     }
